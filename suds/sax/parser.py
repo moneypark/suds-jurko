@@ -128,6 +128,17 @@ class Parser:
             suds.metrics.log.debug('sax (%s) duration: %s', file, timer)
             return handler.nodes[0]
         if string is not None:
+            if (
+                b'Content-Type: application/octet-stream' in string
+                and b'Content-Type: text/xml' in string
+            ):
+                """
+                Response contains XML and binary data.
+                To prevent raising  of SAXParseException from ExpatParser,
+                remove binary data content from original string.
+                """
+                string = string[string.index(b'<?xml '):string.index(b'</S:Envelope>')+len('</S:Envelope>')]
+
             source = InputSource(None)
             source.setByteStream(suds.BytesIO(string))
             sax.parse(source)
